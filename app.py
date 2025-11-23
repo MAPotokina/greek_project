@@ -12,6 +12,7 @@ from config import (
 )
 from src.embeddings import get_embeddings_batch
 from src.rag import VectorStore, generate_answer
+from src.graph import load_graph, get_neighbors
 
 st.title("Greek Mythology Assistant")
 
@@ -83,16 +84,15 @@ if bibliotheca_loaded and len(bibliotheca_data) > 0:
 else:
     vector_store = None
 
-# Load graph data
+# Load graph
 try:
-    nodes_df = pd.read_csv(NODES_CSV_PATH)
-    edges_df = pd.read_csv(EDGES_CSV_PATH)
+    with st.spinner("Loading graph..."):
+        graph = load_graph()
     graph_loaded = True
-except FileNotFoundError as e:
-    st.error(f"Graph data file not found: {e}")
+except Exception as e:
+    st.error(f"Error loading graph: {e}")
     graph_loaded = False
-    nodes_df = pd.DataFrame()
-    edges_df = pd.DataFrame()
+    graph = None
 
 # Display data information
 st.header("Data Information")
@@ -104,13 +104,15 @@ if bibliotheca_loaded:
 else:
     st.error("❌ Bibliotheca data not loaded")
 
-if graph_loaded:
-    st.success(f"✅ Graph Nodes: {len(nodes_df)}")
-    st.success(f"✅ Graph Edges: {len(edges_df)}")
-    if len(nodes_df) > 0:
-        st.write(f"Sample node: {nodes_df.iloc[0]['name'] if 'name' in nodes_df.columns else 'N/A'}")
+if graph_loaded and graph is not None:
+    st.success(f"✅ Graph Nodes: {graph.number_of_nodes()}")
+    st.success(f"✅ Graph Edges: {graph.number_of_edges()}")
+    # Get a sample node
+    if graph.number_of_nodes() > 0:
+        sample_node = list(graph.nodes())[0]
+        st.write(f"Sample node: {sample_node}")
 else:
-    st.error("❌ Graph data not loaded")
+    st.error("❌ Graph not loaded")
 
 # Display sample data
 if bibliotheca_loaded and len(bibliotheca_data) > 0:
@@ -118,9 +120,29 @@ if bibliotheca_loaded and len(bibliotheca_data) > 0:
         sample = bibliotheca_data[0]
         st.json(sample)
 
-if graph_loaded and len(nodes_df) > 0:
+if graph_loaded and graph is not None and graph.number_of_nodes() > 0:
     with st.expander("Sample Graph Node"):
-        st.dataframe(nodes_df.head(1))
+        sample_node = list(graph.nodes())[0]
+        node_attrs = graph.nodes[sample_node]
+        st.write(f"**Name:** {sample_node}")
+        st.write(f"**Description:** {node_attrs.get('description', 'N/A')}")
+        st.write(f"**Type:** {node_attrs.get('type', 'N/A')}")
+        
+    # Test graph queries
+    st.subheader("Test Graph Queries")
+    test_character = st.text_input("Enter character name to find neighbors:", placeholder="e.g., Zeus")
+    if test_character:
+        neighbors = get_neighbors(graph, test_character)
+        if neighbors:
+            st.write(f"**Neighbors of {test_character}:**")
+            st.write(", ".join(neighbors[:10]))  # Show first 10
+            if len(neighbors) > 10:
+                st.write(f"... and {len(neighbors) - 10} more")
+        else:
+            if graph.has_node(test_character):
+                st.info(f"{test_character} has no neighbors in the graph.")
+            else:
+                st.warning(f"{test_character} not found in the graph.")
 
 # Question Answering Section
 if vector_store is not None:

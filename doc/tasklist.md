@@ -7,7 +7,7 @@
 | 1. Setup & Data Loading | ✅ Complete | Project setup, data loading, basic structure | 2024-11-23 |
 | 2. Basic RAG System | ✅ Complete | Vector store, embeddings, retrieval | 2024-11-23 |
 | 3. LLM Integration | ✅ Complete | OpenAI API, question answering | 2024-11-23 |
-| 4. Graph Loading | ⬜ Not Started | NetworkX graph from CSV data | - |
+| 4. Graph Loading | ✅ Complete | NetworkX graph from CSV data | 2024-11-23 |
 | 5. Graph Visualization | ⬜ Not Started | Interactive graph display in UI | - |
 | 6. Graph-Enhanced RAG | ⬜ Not Started | Combine graph context with RAG | - |
 | 7. Monitoring & Polish | ⬜ Not Started | Logging, error handling, final touches | - |
@@ -70,12 +70,12 @@
 
 **Goal**: Build NetworkX graph from CSV data
 
-- [ ] Create src/graph.py for graph operations
-- [ ] Load nodes.csv into NetworkX graph
-- [ ] Load edges.csv as bidirectional edges
-- [ ] Store node attributes (description, type, etc.)
-- [ ] Add graph info display to Streamlit (node/edge counts)
-- [ ] Test: Verify graph structure, query neighbors of a character
+- [x] Create src/graph.py for graph operations
+- [x] Load nodes.csv into NetworkX graph
+- [x] Load edges.csv as bidirectional edges
+- [x] Store node attributes (description, type, etc.)
+- [x] Add graph info display to Streamlit (node/edge counts)
+- [x] Test: Verify graph structure, query neighbors of a character
 
 **Test Criteria**: Graph loads correctly, can query character relationships
 
