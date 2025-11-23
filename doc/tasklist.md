@@ -6,7 +6,7 @@
 |-----------|--------|-------------|-----------------|
 | 1. Setup & Data Loading | ✅ Complete | Project setup, data loading, basic structure | 2024-11-23 |
 | 2. Basic RAG System | ✅ Complete | Vector store, embeddings, retrieval | 2024-11-23 |
-| 3. LLM Integration | ⬜ Not Started | OpenAI API, question answering | - |
+| 3. LLM Integration | ✅ Complete | OpenAI API, question answering | 2024-11-23 |
 | 4. Graph Loading | ⬜ Not Started | NetworkX graph from CSV data | - |
 | 5. Graph Visualization | ⬜ Not Started | Interactive graph display in UI | - |
 | 6. Graph-Enhanced RAG | ⬜ Not Started | Combine graph context with RAG | - |
@@ -54,13 +54,13 @@
 
 **Goal**: Add OpenAI API for question answering
 
-- [ ] Integrate LangChain with OpenAI API
-- [ ] Create prompt template with Bibliotheca context
-- [ ] Implement LLM call function in src/rag.py
-- [ ] Add question input to Streamlit UI
-- [ ] Display LLM answer in UI
-- [ ] Add basic error handling for API calls
-- [ ] Test: Ask question, verify answer is generated from Bibliotheca context
+- [x] Integrate LangChain with OpenAI API
+- [x] Create prompt template with Bibliotheca context
+- [x] Implement LLM call function in src/rag.py
+- [x] Add question input to Streamlit UI
+- [x] Display LLM answer in UI
+- [x] Add basic error handling for API calls
+- [x] Test: Ask question, verify answer is generated from Bibliotheca context
 
 **Test Criteria**: Question returns coherent answer based on retrieved segments
 

@@ -11,7 +11,7 @@ from config import (
     EMBEDDINGS_CACHE_PATH, TOP_K
 )
 from src.embeddings import get_embeddings_batch
-from src.rag import VectorStore
+from src.rag import VectorStore, generate_answer
 
 st.title("Greek Mythology Assistant")
 
@@ -122,29 +122,43 @@ if graph_loaded and len(nodes_df) > 0:
     with st.expander("Sample Graph Node"):
         st.dataframe(nodes_df.head(1))
 
-# RAG Search Section
+# Question Answering Section
 if vector_store is not None:
-    st.header("Search Bibliotheca")
+    st.header("Ask a Question")
     
-    # Search input
-    query = st.text_input("Enter your question:", placeholder="e.g., Who is Zeus?")
+    # Question input
+    query = st.text_input("Enter your question about Greek mythology:", placeholder="e.g., Who is Zeus?")
     
     if query:
-        with st.spinner("Searching..."):
+        with st.spinner("Searching Bibliotheca and generating answer..."):
+            # Retrieve relevant segments
             results = vector_store.search(query, k=TOP_K)
         
         if results:
-            st.subheader(f"Top {len(results)} Results")
-            for i, result in enumerate(results, 1):
-                segment = result['segment']
-                score = result['score']
+            # Generate answer using LLM
+            try:
+                with st.spinner("Generating answer..."):
+                    answer = generate_answer(query, results)
                 
-                with st.expander(f"Result {i} (Distance: {score:.2f})"):
-                    st.write(f"**Segment ID:** {segment.get('segment_id', 'N/A')}")
-                    st.write(f"**Book:** {segment.get('book', 'N/A')}")
-                    st.write(f"**Section:** {segment.get('section', 'N/A')}")
-                    st.write(f"**Content:**")
-                    st.write(segment.get('content', 'N/A'))
+                # Display answer
+                st.subheader("Answer")
+                st.write(answer)
+                
+                # Display retrieved segments
+                st.subheader(f"Retrieved Segments ({len(results)})")
+                for i, result in enumerate(results, 1):
+                    segment = result['segment']
+                    score = result['score']
+                    
+                    with st.expander(f"Segment {i} (Distance: {score:.2f})"):
+                        st.write(f"**Segment ID:** {segment.get('segment_id', 'N/A')}")
+                        st.write(f"**Book:** {segment.get('book', 'N/A')}")
+                        st.write(f"**Section:** {segment.get('section', 'N/A')}")
+                        st.write(f"**Content:**")
+                        st.write(segment.get('content', 'N/A'))
+            except Exception as e:
+                st.error(f"Error generating answer: {str(e)}")
+                st.info("Please try again or check your API key.")
         else:
-            st.warning("No results found.")
+            st.warning("No relevant segments found in Bibliotheca for your question.")
 
