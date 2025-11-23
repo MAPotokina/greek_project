@@ -5,6 +5,11 @@ BIBLIOTHECA_JSON_PATH = "data/raw/bibliotheca_segments.json"
 NODES_CSV_PATH = "data/raw/nodes.csv"
 EDGES_CSV_PATH = "data/raw/edges.csv"
 
+# Embedding settings
+EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_DIMENSION = 1536  # For text-embedding-3-small
+EMBEDDINGS_CACHE_PATH = "data/embeddings.npy"
+
 # LLM settings (for future iterations)
 LLM_MODEL = "gpt-4o-mini"
 TEMPERATURE = 0.7

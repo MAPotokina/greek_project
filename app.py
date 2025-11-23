@@ -4,7 +4,14 @@ Main Streamlit application for Greek Mythology Assistant
 import streamlit as st
 import json
 import pandas as pd
-from config import BIBLIOTHECA_JSON_PATH, NODES_CSV_PATH, EDGES_CSV_PATH
+import numpy as np
+import os
+from config import (
+    BIBLIOTHECA_JSON_PATH, NODES_CSV_PATH, EDGES_CSV_PATH,
+    EMBEDDINGS_CACHE_PATH, TOP_K
+)
+from src.embeddings import get_embeddings_batch
+from src.rag import VectorStore
 
 st.title("Greek Mythology Assistant")
 
@@ -17,6 +24,64 @@ except FileNotFoundError:
     st.error(f"Bibliotheca file not found: {BIBLIOTHECA_JSON_PATH}")
     bibliotheca_loaded = False
     bibliotheca_data = []
+
+# Helper function to generate embeddings (no UI calls)
+def generate_embeddings(segments, progress_callback=None):
+    """Generate embeddings for segments"""
+    texts = [segment['content'] for segment in segments]
+    batch_size = 100
+    embeddings_list = []
+    
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        batch_embeddings = get_embeddings_batch(batch)
+        embeddings_list.extend(batch_embeddings)
+        
+        if progress_callback:
+            progress = (i + len(batch)) / len(texts)
+            progress_callback(progress, i + len(batch), len(texts))
+    
+    return embeddings_list
+
+# Initialize vector store
+@st.cache_resource
+def load_vector_store(_bibliotheca_data):
+    """Load vector store from cached embeddings"""
+    embeddings = np.load(EMBEDDINGS_CACHE_PATH)
+    embeddings_list = embeddings.tolist()
+    return VectorStore(_bibliotheca_data, embeddings_list)
+
+# Load vector store with UI feedback
+if bibliotheca_loaded and len(bibliotheca_data) > 0:
+    if os.path.exists(EMBEDDINGS_CACHE_PATH):
+        st.info("Loading cached embeddings...")
+        vector_store = load_vector_store(bibliotheca_data)
+        st.success("Embeddings loaded from cache!")
+    else:
+        st.info("Generating embeddings (this may take a few minutes)...")
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        def update_progress(progress, current, total):
+            progress_bar.progress(progress)
+            status_text.text(f"Processed {current}/{total} segments")
+        
+        # Generate embeddings with progress
+        embeddings_list = generate_embeddings(bibliotheca_data, update_progress)
+        
+        # Save to cache
+        embeddings_array = np.array(embeddings_list)
+        os.makedirs(os.path.dirname(EMBEDDINGS_CACHE_PATH), exist_ok=True)
+        np.save(EMBEDDINGS_CACHE_PATH, embeddings_array)
+        
+        progress_bar.empty()
+        status_text.empty()
+        st.success("Embeddings generated and cached!")
+        
+        # Create vector store
+        vector_store = VectorStore(bibliotheca_data, embeddings_list)
+else:
+    vector_store = None
 
 # Load graph data
 try:
@@ -56,4 +121,30 @@ if bibliotheca_loaded and len(bibliotheca_data) > 0:
 if graph_loaded and len(nodes_df) > 0:
     with st.expander("Sample Graph Node"):
         st.dataframe(nodes_df.head(1))
+
+# RAG Search Section
+if vector_store is not None:
+    st.header("Search Bibliotheca")
+    
+    # Search input
+    query = st.text_input("Enter your question:", placeholder="e.g., Who is Zeus?")
+    
+    if query:
+        with st.spinner("Searching..."):
+            results = vector_store.search(query, k=TOP_K)
+        
+        if results:
+            st.subheader(f"Top {len(results)} Results")
+            for i, result in enumerate(results, 1):
+                segment = result['segment']
+                score = result['score']
+                
+                with st.expander(f"Result {i} (Distance: {score:.2f})"):
+                    st.write(f"**Segment ID:** {segment.get('segment_id', 'N/A')}")
+                    st.write(f"**Book:** {segment.get('book', 'N/A')}")
+                    st.write(f"**Section:** {segment.get('section', 'N/A')}")
+                    st.write(f"**Content:**")
+                    st.write(segment.get('content', 'N/A'))
+        else:
+            st.warning("No results found.")
 

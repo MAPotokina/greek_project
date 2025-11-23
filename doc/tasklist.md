@@ -5,7 +5,7 @@
 | Iteration | Status | Description | Completion Date |
 |-----------|--------|-------------|-----------------|
 | 1. Setup & Data Loading | ✅ Complete | Project setup, data loading, basic structure | 2024-11-23 |
-| 2. Basic RAG System | ⬜ Not Started | Vector store, embeddings, retrieval | - |
+| 2. Basic RAG System | ✅ Complete | Vector store, embeddings, retrieval | 2024-11-23 |
 | 3. LLM Integration | ⬜ Not Started | OpenAI API, question answering | - |
 | 4. Graph Loading | ⬜ Not Started | NetworkX graph from CSV data | - |
 | 5. Graph Visualization | ⬜ Not Started | Interactive graph display in UI | - |
@@ -37,14 +37,14 @@
 
 **Goal**: Implement vector store and retrieval without LLM
 
-- [ ] Create src/embeddings.py for embedding generation
-- [ ] Generate embeddings for all Bibliotheca segments (OpenAI API)
-- [ ] Create vector store (FAISS or ChromaDB) with embeddings
-- [ ] Create src/rag.py with retrieval function
-- [ ] Implement top-3 segment retrieval by similarity
-- [ ] Add search input to Streamlit UI
-- [ ] Display retrieved segments in UI
-- [ ] Test: Enter query, verify top-3 relevant segments are retrieved
+- [x] Create src/embeddings.py for embedding generation
+- [x] Generate embeddings for all Bibliotheca segments (OpenAI API)
+- [x] Create vector store (FAISS or ChromaDB) with embeddings
+- [x] Create src/rag.py with retrieval function
+- [x] Implement top-3 segment retrieval by similarity
+- [x] Add search input to Streamlit UI
+- [x] Display retrieved segments in UI
+- [x] Test: Enter query, verify top-3 relevant segments are retrieved
 
 **Test Criteria**: Query returns 3 most relevant Bibliotheca segments
 
