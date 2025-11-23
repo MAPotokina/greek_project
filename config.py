@@ -16,3 +16,6 @@ TEMPERATURE = 0.7
 MAX_TOKENS = 500
 TOP_K = 3
 
+# Graph visualization settings
+MAX_VISUALIZATION_NODES = 10  # Reduced for performance
+

@@ -12,7 +12,8 @@ from config import (
 )
 from src.embeddings import get_embeddings_batch
 from src.rag import VectorStore, generate_answer
-from src.graph import load_graph, get_neighbors
+from src.graph import load_graph, get_neighbors, create_visualization
+import streamlit.components.v1 as components
 
 st.title("Greek Mythology Assistant")
 
@@ -143,6 +144,21 @@ if graph_loaded and graph is not None and graph.number_of_nodes() > 0:
                 st.info(f"{test_character} has no neighbors in the graph.")
             else:
                 st.warning(f"{test_character} not found in the graph.")
+
+# Graph Visualization Section (Always Visible)
+if graph_loaded and graph is not None:
+    st.header("Graph Visualization")
+    st.write(f"Interactive graph showing relationships between mythological characters (showing top {min(100, graph.number_of_nodes())} nodes by connections)")
+    st.write(f"Total nodes: {graph.number_of_nodes()}, Total edges: {graph.number_of_edges()}")
+    st.info("Showing top 50 nodes by connections for performance. Graph may take a moment to stabilize.")
+    
+    try:
+        graph_html = create_visualization(graph)
+        components.html(graph_html, height=600, scrolling=False)
+    except Exception as e:
+        st.error(f"Error creating graph visualization: {e}")
+        import traceback
+        st.code(traceback.format_exc())
 
 # Question Answering Section
 if vector_store is not None:
