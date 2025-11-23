@@ -1,0 +1,92 @@
+---
+alwaysApply: true
+---
+
+# Code Development Conventions
+
+> **Reference**: See [vision.md](./vision.md) for complete technical vision and architecture.
+
+## Core Rules
+
+### Simplicity First
+- Choose the simplest solution that works
+- Avoid over-engineering or abstract patterns
+- Prefer explicit code over clever abstractions
+- If it works and is readable, it's good enough
+
+### Code Quality
+- **Readability over cleverness**: Code should be self-documenting
+- **Single responsibility**: Each function/class does one thing
+- **Flat structure**: Avoid deep nesting (max 3-4 levels)
+- **Minimal dependencies**: Only add libraries when absolutely necessary
+
+### Naming Conventions
+- Use descriptive, clear names
+- Functions: verb phrases (`get_embeddings`, `retrieve_segments`)
+- Variables: noun phrases (`user_question`, `top_segments`)
+- Classes: nouns (`RAGSystem`, `GraphBuilder`)
+- Constants: UPPER_SNAKE_CASE (`MAX_TOKENS`, `TOP_K`)
+
+### Code Organization
+- Keep functions small and focused (50 lines or less when possible)
+- Group related functions in modules
+- Use `utils/` for reusable helper functions
+- Import from `config.py` for all settings
+
+### Error Handling
+- Use simple try/except blocks
+- Log errors with context
+- Fail gracefully with user-friendly messages
+- No complex retry logic (1 retry max for API calls)
+
+### Documentation
+- Use docstrings for functions/classes (one-line is fine for simple functions)
+- Comments only when code intent is not obvious
+- Keep README.md updated with setup instructions
+
+### Testing Approach
+- Test critical paths (RAG retrieval, LLM calls)
+- Use simple assertions
+- No complex test frameworks for MVP
+
+### Dependencies
+- Prefer standard library when possible
+- Use open source libraries (except OpenAI API)
+- Pin versions in `requirements.txt`
+- Document why each dependency is needed
+
+## Project-Specific Rules
+
+### File Structure
+- Follow the structure defined in [vision.md](./vision.md#project-structure)
+- Keep `app.py` as the main Streamlit entry point
+- Put logic in `src/` modules
+- Utilities in `utils/`
+
+### Configuration
+- All settings in `config.py` (import, don't duplicate)
+- API keys in `.env` only
+- No hardcoded values
+
+### Logging
+- Use Python `logging` module
+- Console output only
+- Log: LLM calls, retrievals, errors
+- Format: `[TIMESTAMP] LEVEL: Message`
+
+### Data Handling
+- Load data at startup (see [vision.md](./vision.md#workflows))
+- Use in-memory structures (NetworkX, FAISS/ChromaDB)
+- No database for MVP
+
+## Code Review Checklist
+
+Before submitting code, ensure:
+- [ ] Code is simple and readable
+- [ ] Functions have single responsibility
+- [ ] No unnecessary dependencies added
+- [ ] Error handling is simple and appropriate
+- [ ] Logging is in place for key operations
+- [ ] Configuration values come from `config.py`
+- [ ] Follows project structure from vision.md
+

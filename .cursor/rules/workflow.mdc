@@ -1,0 +1,75 @@
+---
+alwaysApply: true
+---
+
+# Development Workflow
+
+> **Reference**: Follow [tasklist.md](./tasklist.md) strictly. See [vision.md](../vision.md) for architecture and [conventions.md](../conventions.md) for code rules.
+
+## Workflow Rules
+
+### Before Starting Work
+1. Review current iteration in [tasklist.md](./tasklist.md)
+2. Check progress report status
+3. Read relevant sections in [vision.md](../vision.md)
+
+### Iteration Workflow
+
+#### Step 1: Propose Solution
+- Analyze iteration requirements
+- Propose implementation approach
+- Provide code snippets for key components
+- Explain how it fits the architecture
+- **Wait for approval before implementing**
+
+#### Step 2: Implement
+- Write code following [conventions.md](../conventions.md)
+- Keep it simple (KISS principle)
+- Implement only approved solution
+- **Wait for confirmation after implementation**
+
+#### Step 3: Test
+- Verify test criteria from tasklist
+- Ensure functionality works as expected
+- Fix any issues found
+
+#### Step 4: Update Progress
+- Mark completed tasks with ✅ in [tasklist.md](./tasklist.md)
+- Update progress report table status
+- Add completion date if finished
+
+#### Step 5: Commit
+- Commit changes to repository
+- Use clear commit message: `Iteration X: [brief description]`
+
+#### Step 6: Next Iteration
+- Review next iteration requirements
+- Agree on proceeding to next iteration
+- Repeat workflow from Step 1
+
+## Important Rules
+
+- **Strict Order**: Complete iterations sequentially (1 → 2 → 3...)
+- **No Skipping**: Don't move to next iteration until current one is confirmed complete
+- **Approval Required**: Always get approval before implementing
+- **Confirmation Required**: Wait for confirmation after implementation
+- **Update Tasklist**: Keep progress report current
+- **Commit Regularly**: Commit after each completed iteration
+
+## Status Updates
+
+When updating [tasklist.md](./tasklist.md) progress report:
+- ⬜ Not Started
+- 🟡 In Progress (when starting iteration)
+- ✅ Complete (when iteration confirmed complete)
+- ❌ Blocked (if blocked, document why)
+
+## Code Review Checklist
+
+Before requesting approval:
+- [ ] Code follows [conventions.md](../conventions.md)
+- [ ] Matches architecture in [vision.md](../vision.md)
+- [ ] Test criteria met
+- [ ] No unnecessary complexity
+- [ ] Error handling in place
+
