@@ -31,7 +31,7 @@ def load_graph():
         # Use id as node identifier
         G.add_node(row['id'], **node_attrs)
     
-    # Add edges (bidirectional/undirected)
+    # Add edges (bidirectional/undirected) with metadata
     edges_added = 0
     edges_skipped = 0
     for _, row in edges_df.iterrows():
@@ -41,7 +41,14 @@ def load_graph():
         
         # Only add edge if both nodes exist
         if G.has_node(source) and G.has_node(target):
-            G.add_edge(source, target, weight=weight)
+            # Store edge metadata for relationship description
+            edge_attrs = {
+                'weight': weight,
+                'title': row.get('title', ''),
+                'author': row.get('author', ''),
+                'chapter': row.get('chapter', ''),
+            }
+            G.add_edge(source, target, **edge_attrs)
             edges_added += 1
         else:
             edges_skipped += 1
@@ -56,7 +63,7 @@ def get_neighbors(graph, character_name: str) -> list:
     return []
 
 
-def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES) -> str:
+def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES, selected_nodes=None) -> str:
     """Create interactive graph visualization"""
     # Create pyvis network with optimized settings
     net = Network(
@@ -64,17 +71,27 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES) -> str
         width="100%", 
         bgcolor="#ffffff", 
         font_color="black",
-        directed=False
+        directed=False,
     )
     
-    # Get top nodes by degree for performance
+    # Determine nodes to show
     degrees = dict(graph.degree())
-    if not degrees:
-        # If no edges, show all nodes
-        nodes_to_show = list(graph.nodes())[:max_nodes]
+    if selected_nodes:
+        # Show selected nodes and their neighbors
+        nodes_to_show = set(selected_nodes)
+        for node in selected_nodes:
+            if graph.has_node(node):
+                neighbors = list(graph.neighbors(node))[:2]
+                nodes_to_show.update(neighbors)
+        nodes_to_show = list(nodes_to_show)[:max_nodes]
     else:
-        nodes_to_show = sorted(degrees.items(), key=lambda x: x[1], reverse=True)[:max_nodes]
-        nodes_to_show = [node for node, _ in nodes_to_show]
+        # Get top nodes by degree for performance
+        if not degrees:
+            # If no edges, show all nodes
+            nodes_to_show = list(graph.nodes())[:max_nodes]
+        else:
+            nodes_to_show = sorted(degrees.items(), key=lambda x: x[1], reverse=True)[:max_nodes]
+            nodes_to_show = [node for node, _ in nodes_to_show]
     
     # Add nodes
     for node_id in nodes_to_show:
@@ -90,17 +107,53 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES) -> str
             # Size based on degree
             degree = degrees.get(node_id, 0)
             size = min(10 + degree * 2, 30)  # Scale size with degree, max 30
-            net.add_node(str(node_id), label=label, title=title, color="#4A90E2", size=size)
+            
+            # Highlight selected nodes
+            if selected_nodes and node_id in selected_nodes:
+                color = "#FF6B6B"  # Red for selected
+                size = max(size, 15)  # Make selected nodes larger
+            else:
+                color = "#4A90E2"  # Blue for regular nodes
+            
+            net.add_node(str(node_id), label=label, title=title, color=color, size=size)
     
     # Add edges between shown nodes (limit to avoid performance issues)
     edge_count = 0
-    max_edges = 500  # Limit total edges for performance
+    max_edges = 50  # Limit total edges for performance
+    edges_added = set()  # Track edges to avoid duplicates
+    
     for node_id in nodes_to_show:
         if graph.has_node(node_id) and edge_count < max_edges:
             for neighbor in graph.neighbors(node_id):
                 if neighbor in nodes_to_show and edge_count < max_edges:
-                    net.add_edge(str(node_id), str(neighbor), color="#cccccc", width=1)
-                    edge_count += 1
+                    # Create edge key to avoid duplicates
+                    edge_key = tuple(sorted([str(node_id), str(neighbor)]))
+                    if edge_key not in edges_added:
+                        # Get edge attributes for description
+                        edge_data = graph.get_edge_data(node_id, neighbor, {})
+                        title = edge_data.get('title', '')
+                        author = edge_data.get('author', '')
+                        
+                        # Create short label from metadata
+                        label = ""
+                        if title:
+                            # Use short title (first 30 chars)
+                            short_title = title[:30] + "..." if len(title) > 30 else title
+                            label = short_title
+                        elif author:
+                            label = f"by {author}"
+                        
+                        # Add edge with label
+                        net.add_edge(
+                            str(node_id), 
+                            str(neighbor), 
+                            color="#cccccc", 
+                            width=1,
+                            title=label if label else "Connected",
+                            label=label[:15] if label else ""  # Short label on edge
+                        )
+                        edges_added.add(edge_key)
+                        edge_count += 1
     
     # Set optimized physics for better layout and performance
     net.set_options("""
@@ -111,7 +164,12 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES) -> str
         }
       },
       "edges": {
-        "smooth": false
+        "smooth": false,
+        "font": {
+          "size": 10,
+          "align": "middle"
+        },
+        "labelHighlightBold": false
       },
       "physics": {
         "enabled": true,
@@ -129,7 +187,7 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES) -> str
       }
     }
     """)
-    
+    # net.show_buttons(filter_=['nodes'])
     # Generate HTML
     return net.generate_html()
 

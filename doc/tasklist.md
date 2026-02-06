@@ -4,13 +4,13 @@
 
 | Iteration | Status | Description | Completion Date |
 |-----------|--------|-------------|-----------------|
-| 1. Setup & Data Loading | ✅ Complete | Project setup, data loading, basic structure | 2024-11-23 |
-| 2. Basic RAG System | ✅ Complete | Vector store, embeddings, retrieval | 2024-11-23 |
-| 3. LLM Integration | ✅ Complete | OpenAI API, question answering | 2024-11-23 |
-| 4. Graph Loading | ✅ Complete | NetworkX graph from CSV data | 2024-11-23 |
-| 5. Graph Visualization | ✅ Complete | Interactive graph display in UI | 2024-11-23 |
-| 6. Graph-Enhanced RAG | ⬜ Not Started | Combine graph context with RAG | - |
-| 7. Monitoring & Polish | ⬜ Not Started | Logging, error handling, final touches | - |
+| 1. Setup & Data Loading | ✅ Complete | Project setup, data loading, basic structure | 2025-11-23 |
+| 2. Basic RAG System | ✅ Complete | Vector store, embeddings, retrieval | 2025-11-23 |
+| 3. LLM Integration | ✅ Complete | OpenAI API, question answering | 2025-11-23 |
+| 4. Graph Loading | ✅ Complete | NetworkX graph from CSV data | 2025-11-23 |
+| 5. Graph Visualization | ✅ Complete | Interactive graph display in UI | 2025-11-23 |
+| 6. Graph-Enhanced RAG | ✅ Complete | Add graph context to RAG answers + graph highlight | 2026-02-06 |
+| 7. Presentability & Polish | ⬜ Not Started | README, robustness, light logging, minimal tests | - |
 
 **Status Legend**: ✅ Complete | 🟡 In Progress | ⬜ Not Started | ❌ Blocked
 
@@ -100,33 +100,33 @@
 
 **Goal**: Combine graph context with RAG for better answers
 
-- [ ] Extract character names from user question
-- [ ] Extract character names from retrieved segments
-- [ ] Query graph for character neighbors and relationships
-- [ ] Update prompt template to include graph context
-- [ ] Auto-select characters in graph visualization
-- [ ] Update graph display when question is asked
-- [ ] Test: Question about character relationships uses graph context
+- [x] Extract candidate character names via LLM JSON output (already used for graph highlighting)
+- [x] Auto-select characters in graph visualization (selected nodes highlighted)
+- [x] Update graph display when question is asked
+- [x] Extract character names deterministically from question + retrieved segments (match against graph nodes)
+- [x] Normalize / map extracted names → graph node IDs (match against node IDs + node attribute `name`)
+- [x] Query graph for neighbors + relationship metadata (edge attributes where available)
+- [x] Update LLM prompt to include a “Graph Relationships” context block (GraphRAG core)
+- [ ] (Stretch) Second-pass retrieval: add extra Bibliotheca segments mentioning graph-neighbors
+- [x] Test: relationship questions include at least one graph-derived relationship when available; highlighted nodes match extracted characters
 
-**Test Criteria**: Answers include graph relationship information, graph updates with question
+**Test Criteria**: Answers incorporate graph-derived relationships when relevant, and the graph highlights the same characters used to build graph context
 
 ---
 
-## Iteration 7: Monitoring & Polish
+## Iteration 7: Presentability & Polish
 
-**Goal**: Add logging, improve error handling, finalize MVP
+**Goal**: Make the project robust + demo-ready (docs, UX, basic tests, light logging)
 
-- [ ] Set up Python logging (console output)
-- [ ] Log LLM calls with metrics (tokens, time)
-- [ ] Log vector store retrievals
-- [ ] Log graph queries
-- [ ] Improve error messages for users
-- [ ] Add loading indicators in UI
-- [ ] Create README.md with setup instructions
-- [ ] Final testing of complete workflow
-- [ ] Test: Verify all features work together, logs appear in console
+- [ ] Add sidebar instructions + clear “what’s loaded” status + dataset attribution
+- [ ] Improve user-facing errors (missing API key, missing/corrupt embeddings cache, missing CSV columns)
+- [ ] Add loading indicators where useful (keep it simple)
+- [ ] Add light console logging for retrieval + graph query + LLM call duration (no heavy monitoring)
+- [ ] Add minimal pytest tests for critical functions (character extraction, graph context builder)
+- [ ] Expand README: features, usage, screenshot/GIF, env vars, deployment notes (Streamlit Community Cloud)
+- [ ] Final manual demo checklist (fresh venv, clean run, one good example Q&A)
 
-**Test Criteria**: Complete workflow works, all operations logged, user-friendly errors
+**Test Criteria**: A clean end-to-end demo run works reliably; README is presentable; a small test suite passes
 
 ---
 

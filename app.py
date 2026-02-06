@@ -145,24 +145,13 @@ if graph_loaded and graph is not None and graph.number_of_nodes() > 0:
             else:
                 st.warning(f"{test_character} not found in the graph.")
 
-# Graph Visualization Section (Always Visible)
-if graph_loaded and graph is not None:
-    st.header("Graph Visualization")
-    st.write(f"Interactive graph showing relationships between mythological characters (showing top {min(100, graph.number_of_nodes())} nodes by connections)")
-    st.write(f"Total nodes: {graph.number_of_nodes()}, Total edges: {graph.number_of_edges()}")
-    st.info("Showing top 50 nodes by connections for performance. Graph may take a moment to stabilize.")
-    
-    try:
-        graph_html = create_visualization(graph)
-        components.html(graph_html, height=600, scrolling=False)
-    except Exception as e:
-        st.error(f"Error creating graph visualization: {e}")
-        import traceback
-        st.code(traceback.format_exc())
-
 # Question Answering Section
 if vector_store is not None:
     st.header("Ask a Question")
+    
+    # Initialize session state for graph display tracking
+    if 'graph_shown_with_selection' not in st.session_state:
+        st.session_state.graph_shown_with_selection = False
     
     # Question input
     query = st.text_input("Enter your question about Greek mythology:", placeholder="e.g., Who is Zeus?")
@@ -173,10 +162,38 @@ if vector_store is not None:
             results = vector_store.search(query, k=TOP_K)
         
         if results:
-            # Generate answer using LLM
+            # Generate answer using LLM (returns structured output with answer and characters)
             try:
                 with st.spinner("Generating answer..."):
-                    answer = generate_answer(query, results)
+                    result = generate_answer(query, results, graph if graph_loaded else None)
+                    # result = {
+                    #     'answer': 'This is a test answer',
+                    #     'characters': ['Zeus', 'Metis', 'Semele', 'Cronus', 'Athena']
+                    # }
+                    with st.expander("Graph context"):
+                        st.text(result.get("graph_context", ""))
+                        st.write("Selected nodes:", result.get("selected_nodes", []))
+                    answer = result.get("answer", "")
+                    llm_characters = result.get("characters", [])
+                    selected_characters = result.get("selected_nodes", []) or []
+                
+                # Fallback: Match LLM-extracted character names to graph nodes (if no selected_nodes returned)
+                if not selected_characters and graph_loaded and graph is not None and llm_characters:
+                    # Match character names from LLM to graph node IDs
+                    graph_nodes_lower = {str(node).lower(): node for node in graph.nodes()}
+                    for char_name in llm_characters:
+                        char_lower = char_name.lower().strip()
+                        # Try exact match first
+                        if char_lower in graph_nodes_lower:
+                            selected_characters.append(graph_nodes_lower[char_lower])
+                        else:
+                            # Try partial match
+                            for node_lower, node_id in graph_nodes_lower.items():
+                                if char_lower in node_lower or node_lower in char_lower:
+                                    selected_characters.append(node_id)
+                                    break
+                    # Remove duplicates
+                    selected_characters = list(set(selected_characters))
                 
                 # Display answer
                 st.subheader("Answer")
@@ -194,9 +211,44 @@ if vector_store is not None:
                         st.write(f"**Section:** {segment.get('section', 'N/A')}")
                         st.write(f"**Content:**")
                         st.write(segment.get('content', 'N/A'))
+                
+                # Update graph visualization with selected characters
+                if graph_loaded and graph is not None and selected_characters:
+                    st.subheader("Graph Visualization")
+                    st.write(f"Showing characters from your question/context: {', '.join([str(c) for c in selected_characters[:5]])}")
+                    if llm_characters:
+                        st.write(f"LLM identified: {', '.join(llm_characters[:5])}")
+                    try:
+                        graph_html = create_visualization(graph, selected_nodes=selected_characters)
+                        components.html(graph_html, height=600, scrolling=False)
+                        st.session_state.graph_shown_with_selection = True
+                    except Exception as e:
+                        st.error(f"Error updating graph visualization: {e}")
+                        st.session_state.graph_shown_with_selection = False
+                else:
+                    st.session_state.graph_shown_with_selection = False
+                    if llm_characters:
+                        st.info(f"LLM identified characters: {', '.join(llm_characters)}, but they weren't found in the graph.")
             except Exception as e:
                 st.error(f"Error generating answer: {str(e)}")
                 st.info("Please try again or check your API key.")
+                st.session_state.graph_shown_with_selection = False
         else:
             st.warning("No relevant segments found in Bibliotheca for your question.")
+            st.session_state.graph_shown_with_selection = False
+
+# Graph Visualization Section (Always Visible - default view, only if no selection shown)
+if graph_loaded and graph is not None and not st.session_state.get('graph_shown_with_selection', False):
+    st.header("Graph Visualization")
+    st.write(f"Interactive graph showing relationships between mythological characters")
+    st.write(f"Total nodes: {graph.number_of_nodes()}, Total edges: {graph.number_of_edges()}")
+    st.info("Ask a question to see relevant characters highlighted in the graph.")
+    
+    try:
+        graph_html = create_visualization(graph)
+        components.html(graph_html, height=600, scrolling=False)
+    except Exception as e:
+        st.error(f"Error creating graph visualization: {e}")
+        import traceback
+        st.code(traceback.format_exc())
 
