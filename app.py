@@ -14,6 +14,7 @@ from config import (
 from src.embeddings import get_embeddings_batch
 from src.rag import VectorStore, generate_answer
 from src.graph import load_graph, get_neighbors, create_visualization
+from utils.ui_style import apply_global_styles
 import streamlit.components.v1 as components
 
 # Configure root logger
@@ -24,6 +25,14 @@ logging.basicConfig(
 )
 
 load_dotenv()
+
+st.set_page_config(
+    page_title="Greek Mythology Assistant",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+apply_global_styles()
 
 st.title("Greek Mythology Assistant")
 
@@ -145,7 +154,7 @@ with st.sidebar:
     st.caption(
         "**Data sources**\n\n"
         "Text: [Bibliotheca (Pseudo-Apollodorus)](https://www.theoi.com/Text/Apollodorus1.html)\n\n"
-        "Graph: [Greek Mythology Knowledge Graph (Kaggle)](https://www.kaggle.com/datasets/)"
+        "Graph: [Greek Mythology Knowledge Graph (Kaggle)](https://www.kaggle.com/datasets/zaylaatsi/greek-mythology-network-data/data)"
     )
 
 # --- Main area: Q&A ---
@@ -211,7 +220,8 @@ if vector_store is not None:
                     try:
                         with st.spinner("Rendering graph..."):
                             graph_html = create_visualization(graph, selected_nodes=selected_characters)
-                        components.html(graph_html, height=600, scrolling=False)
+                        # Slightly taller iframe to prevent border clipping at bottom
+                        components.html(graph_html, height=640, scrolling=False)
                         st.session_state.graph_shown_with_selection = True
                     except Exception as e:
                         st.error(f"Error updating graph visualization: {e}")
@@ -237,6 +247,7 @@ if graph_loaded and graph is not None and not st.session_state.get('graph_shown_
     try:
         with st.spinner("Rendering graph..."):
             graph_html = create_visualization(graph)
-        components.html(graph_html, height=600, scrolling=False)
+        # Slightly taller iframe to prevent border clipping at bottom
+        components.html(graph_html, height=640, scrolling=False)
     except Exception as e:
         st.error(f"Error creating graph visualization: {e}")

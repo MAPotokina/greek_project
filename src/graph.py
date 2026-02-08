@@ -3,7 +3,19 @@ import logging
 import networkx as nx
 import pandas as pd
 from pyvis.network import Network
-from config import NODES_CSV_PATH, EDGES_CSV_PATH, MAX_VISUALIZATION_NODES
+from config import (
+    NODES_CSV_PATH,
+    EDGES_CSV_PATH,
+    MAX_VISUALIZATION_NODES,
+    MAX_VISUALIZATION_EDGES,
+    GRAPH_BG_COLOR,
+    GRAPH_FONT_COLOR,
+    GRAPH_NODE_COLOR,
+    GRAPH_NODE_BORDER_COLOR,
+    GRAPH_NODE_HIGHLIGHT_COLOR,
+    GRAPH_EDGE_COLOR,
+)
+from utils.graph_style import apply_graph_embed_styles
 
 logger = logging.getLogger(__name__)
 
@@ -77,8 +89,8 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES, select
     net = Network(
         height="600px", 
         width="100%", 
-        bgcolor="#ffffff", 
-        font_color="black",
+        bgcolor=GRAPH_BG_COLOR,
+        font_color=GRAPH_FONT_COLOR,
         directed=False,
     )
     
@@ -91,7 +103,15 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES, select
             if graph.has_node(node):
                 neighbors = list(graph.neighbors(node))[:2]
                 nodes_to_show.update(neighbors)
-        nodes_to_show = list(nodes_to_show)[:max_nodes]
+        # Keep selected nodes first (more deterministic edge rendering)
+        ordered = []
+        for n in selected_nodes:
+            if n in nodes_to_show and n not in ordered:
+                ordered.append(n)
+        for n in nodes_to_show:
+            if n not in ordered:
+                ordered.append(n)
+        nodes_to_show = ordered[:max_nodes]
     else:
         # Get top nodes by degree for performance
         if not degrees:
@@ -100,13 +120,46 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES, select
         else:
             nodes_to_show = sorted(degrees.items(), key=lambda x: x[1], reverse=True)[:max_nodes]
             nodes_to_show = [node for node, _ in nodes_to_show]
+
+    # Decide which edges to render first (cap to MAX_VISUALIZATION_EDGES)
+    max_edges = MAX_VISUALIZATION_EDGES
+    edges_seen: set[tuple[str, str]] = set()
+    edges_to_add: list[tuple[str, str, dict]] = []
+
+    node_iteration = nodes_to_show
+    if selected_nodes:
+        node_iteration = list(selected_nodes) + [n for n in nodes_to_show if n not in selected_nodes]
+
+    nodes_to_show_set = set(nodes_to_show)
+    for node_id in node_iteration:
+        if not graph.has_node(node_id) or len(edges_to_add) >= max_edges:
+            continue
+        for neighbor in graph.neighbors(node_id):
+            if neighbor not in nodes_to_show_set or len(edges_to_add) >= max_edges:
+                continue
+            a, b = sorted([str(node_id), str(neighbor)])
+            key = (a, b)
+            if key in edges_seen:
+                continue
+            edges_seen.add(key)
+            edge_data = graph.get_edge_data(node_id, neighbor, {}) or {}
+            edges_to_add.append((str(node_id), str(neighbor), edge_data))
+
+    # Remove isolated nodes: only render nodes that participate in at least one rendered edge
+    connected_nodes: set[str] = set()
+    for a, b, _ in edges_to_add:
+        connected_nodes.add(a)
+        connected_nodes.add(b)
+
+    nodes_to_render = [n for n in nodes_to_show if str(n) in connected_nodes]
     
     # Add nodes
-    for node_id in nodes_to_show:
+    for node_id in nodes_to_render:
         if graph.has_node(node_id):
             attrs = graph.nodes[node_id]
-            # Use id as label (id is the character name in nodes.csv)
-            label = str(node_id)
+            # Prefer human-readable name attribute when present
+            display_name = attrs.get("name") or node_id
+            label = str(display_name)
             # Truncate long labels
             if len(label) > 20:
                 label = label[:17] + "..."
@@ -118,50 +171,50 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES, select
             
             # Highlight selected nodes
             if selected_nodes and node_id in selected_nodes:
-                color = "#FF6B6B"  # Red for selected
+                color = GRAPH_NODE_HIGHLIGHT_COLOR  # Gold highlight
                 size = max(size, 15)  # Make selected nodes larger
             else:
-                color = "#4A90E2"  # Blue for regular nodes
-            
-            net.add_node(str(node_id), label=label, title=title, color=color, size=size)
+                color = GRAPH_NODE_COLOR  # Terracotta
+
+            net.add_node(
+                str(node_id),
+                label=label,
+                title=title,
+                color={
+                    "background": color,
+                    "border": GRAPH_NODE_BORDER_COLOR,
+                    "highlight": {"background": GRAPH_NODE_HIGHLIGHT_COLOR, "border": GRAPH_NODE_BORDER_COLOR},
+                },
+                borderWidth=2,
+                size=size,
+                font={"face": "Georgia", "color": GRAPH_FONT_COLOR},
+            )
     
-    # Add edges between shown nodes (limit to avoid performance issues)
-    edge_count = 0
-    max_edges = 50  # Limit total edges for performance
-    edges_added = set()  # Track edges to avoid duplicates
-    
-    for node_id in nodes_to_show:
-        if graph.has_node(node_id) and edge_count < max_edges:
-            for neighbor in graph.neighbors(node_id):
-                if neighbor in nodes_to_show and edge_count < max_edges:
-                    # Create edge key to avoid duplicates
-                    edge_key = tuple(sorted([str(node_id), str(neighbor)]))
-                    if edge_key not in edges_added:
-                        # Get edge attributes for description
-                        edge_data = graph.get_edge_data(node_id, neighbor, {})
-                        title = edge_data.get('title', '')
-                        author = edge_data.get('author', '')
-                        
-                        # Create short label from metadata
-                        label = ""
-                        if title:
-                            # Use short title (first 30 chars)
-                            short_title = title[:30] + "..." if len(title) > 30 else title
-                            label = short_title
-                        elif author:
-                            label = f"by {author}"
-                        
-                        # Add edge with label
-                        net.add_edge(
-                            str(node_id), 
-                            str(neighbor), 
-                            color="#cccccc", 
-                            width=1,
-                            title=label if label else "Connected",
-                            label=label[:15] if label else ""  # Short label on edge
-                        )
-                        edges_added.add(edge_key)
-                        edge_count += 1
+    # Add selected edges (already capped); endpoints are already filtered to connected nodes
+    for a, b, edge_data in edges_to_add:
+        if a not in connected_nodes or b not in connected_nodes:
+            continue
+
+        title = (edge_data.get("title", "") or "")
+        author = (edge_data.get("author", "") or "")
+
+        # Create short label from metadata
+        label = ""
+        if title:
+            short_title = title[:30] + "..." if len(title) > 30 else title
+            label = short_title
+        elif author:
+            label = f"by {author}"
+
+        net.add_edge(
+            a,
+            b,
+            color=GRAPH_EDGE_COLOR,
+            width=1,
+            title=label if label else "Connected",
+            label=label[:15] if label else "",
+            font={"face": "Georgia", "size": 10, "color": GRAPH_FONT_COLOR},
+        )
     
     # Set optimized physics for better layout and performance
     net.set_options("""
@@ -173,6 +226,9 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES, select
       },
       "edges": {
         "smooth": false,
+        "color": {
+          "inherit": false
+        },
         "font": {
           "size": 10,
           "align": "middle"
@@ -186,16 +242,18 @@ def create_visualization(graph, max_nodes: int = MAX_VISUALIZATION_NODES, select
           "iterations": 50
         },
         "barnesHut": {
-          "gravitationalConstant": -3000,
-          "centralGravity": 0.3,
-          "springLength": 150,
-          "springConstant": 0.05,
-          "damping": 0.09
+          "gravitationalConstant": -2400,
+          "centralGravity": 0.25,
+          "springLength": 170,
+          "springConstant": 0.04,
+          "damping": 0.12
         }
       }
     }
     """)
     # net.show_buttons(filter_=['nodes'])
     # Generate HTML
-    return net.generate_html()
+    html = net.generate_html()
+
+    return apply_graph_embed_styles(html)
 

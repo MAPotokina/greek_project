@@ -1,0 +1,30 @@
+/* Styling applied inside the Pyvis-generated HTML (graph iframe). */
+
+html, body {
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: __GRAPH_BG_COLOR__ !important;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* Pyvis sometimes wraps content in Bootstrap-like containers/cards */
+.container, .container-fluid, .card, .card-body {
+  background: transparent !important;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Make the graph area visible against the page background */
+#mynetwork {
+  display: block;
+  background: #F7EEDC !important;
+  border: 1px solid __GRAPH_NODE_BORDER_COLOR__ !important;
+  box-sizing: border-box !important;
+  outline: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+

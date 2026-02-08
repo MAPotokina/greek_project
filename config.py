@@ -18,4 +18,13 @@ TOP_K = 3
 
 # Graph visualization settings
 MAX_VISUALIZATION_NODES = 20  # Reduced for performance
+MAX_VISUALIZATION_EDGES = 10  # Limit relations shown (demo-friendly)
+
+# Graph theme (ancient Greece-inspired)
+GRAPH_BG_COLOR = "#F3E7D3"  # parchment
+GRAPH_FONT_COLOR = "#2B241B"  # dark sepia
+GRAPH_NODE_COLOR = "#B07A3A"  # terracotta
+GRAPH_NODE_BORDER_COLOR = "#6B4A2D"  # bronze
+GRAPH_NODE_HIGHLIGHT_COLOR = "#C9A227"  # gold
+GRAPH_EDGE_COLOR = "#8A7A66"  # warm grey-brown
 
