@@ -166,6 +166,11 @@ Provide your response as a JSON object with two fields:
 2. "characters": A list of Greek mythological character names mentioned in the question or your answer (use exact names as they appear in Greek mythology, e.g., "Zeus", "Aphrodite", "Heracles").
 Limit the character list to exactly five characters that are most relevant to the question.
 
+Answer style for the "answer" field:
+- Write in an engaging, literary myth-teller voice: vivid but clear, lightly witty, and modern in readability.
+- Use the Bibliotheca context and Graph Relationships to stay grounded; don’t invent facts not supported by them.
+- Write EXACTLY two short paragraphs, separated by a blank line.
+
 Return ONLY valid JSON, no other text. Format:
 {{
   "answer": "your answer here",

@@ -13,7 +13,7 @@ EMBEDDINGS_CACHE_PATH = "data/embeddings.npy"
 # LLM settings (for future iterations)
 LLM_MODEL = "gpt-4o-mini"
 TEMPERATURE = 0.7
-MAX_TOKENS = 500
+MAX_TOKENS = 800
 TOP_K = 3
 
 # Graph visualization settings
