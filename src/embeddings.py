@@ -1,8 +1,11 @@
 """Embedding generation using OpenAI API"""
+import logging
 from openai import OpenAI
 from config import EMBEDDING_MODEL
 import os
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 

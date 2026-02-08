@@ -1,7 +1,10 @@
 """Simple character node extraction from text."""
 
+import logging
 import re
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def extract_characters(text: str, graph: Any, max_characters: int = 5) -> list:
@@ -51,5 +54,6 @@ def extract_characters(text: str, graph: Any, max_characters: int = 5) -> list:
             seen.add(node_id)
             result.append(node_id)
 
+    logger.info("Extracted %d character(s) from text (%d chars)", len(result[:max_characters]), len(text))
     return result[:max_characters]
 

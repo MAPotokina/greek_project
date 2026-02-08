@@ -1,16 +1,24 @@
 """Graph operations using NetworkX"""
+import logging
 import networkx as nx
 import pandas as pd
 from pyvis.network import Network
 from config import NODES_CSV_PATH, EDGES_CSV_PATH, MAX_VISUALIZATION_NODES
 
+logger = logging.getLogger(__name__)
+
 def load_graph():
     """Load graph from CSV files"""
     # Load nodes
     nodes_df = pd.read_csv(NODES_CSV_PATH)
-    
+    if 'id' not in nodes_df.columns:
+        raise ValueError(f"nodes.csv missing required column 'id'. Found: {list(nodes_df.columns)}")
+
     # Load edges
     edges_df = pd.read_csv(EDGES_CSV_PATH)
+    for col in ('source', 'target'):
+        if col not in edges_df.columns:
+            raise ValueError(f"edges.csv missing required column '{col}'. Found: {list(edges_df.columns)}")
     
     # Create undirected graph
     G = nx.Graph()
@@ -53,7 +61,7 @@ def load_graph():
         else:
             edges_skipped += 1
     
-    print(f"Graph loaded: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges ({edges_added} added, {edges_skipped} skipped)")
+    logger.info("Graph loaded: %d nodes, %d edges (%d added, %d skipped)", G.number_of_nodes(), G.number_of_edges(), edges_added, edges_skipped)
     return G
 
 def get_neighbors(graph, character_name: str) -> list:

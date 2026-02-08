@@ -1,4 +1,6 @@
 """RAG retrieval functions"""
+import logging
+import time
 import faiss  # type: ignore
 import numpy as np
 import json
@@ -7,6 +9,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from src.embeddings import get_embedding
 from config import EMBEDDING_DIMENSION, TOP_K, LLM_MODEL, TEMPERATURE, MAX_TOKENS
 from utils.character_extraction import extract_characters
+
+logger = logging.getLogger(__name__)
 
 class VectorStore:
     def __init__(self, segments: list, embeddings: list):
@@ -36,6 +40,7 @@ class VectorStore:
                     'segment': self.segments[idx],
                     'score': float(distances[0][i])
                 })
+        logger.info("Vector search: query=%r, results=%d", query[:80], len(results))
         return results
 
 
@@ -113,6 +118,7 @@ def build_graph_context(
         if len(lines) >= max_total_lines:
             break
 
+    logger.info("Graph context: %d relationship line(s) for %d selected node(s)", len(lines), len(selected_nodes))
     return "\n".join(lines)
 
 
@@ -189,7 +195,9 @@ Return ONLY valid JSON, no other text. Format:
     
     # Generate answer with error handling
     try:
+        t0 = time.time()
         response = chain.invoke(payload)
+        logger.info("LLM call completed in %.2fs", time.time() - t0)
         
         # Parse JSON response
         try:

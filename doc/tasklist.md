@@ -10,7 +10,7 @@
 | 4. Graph Loading | ✅ Complete | NetworkX graph from CSV data | 2025-11-23 |
 | 5. Graph Visualization | ✅ Complete | Interactive graph display in UI | 2025-11-23 |
 | 6. Graph-Enhanced RAG | ✅ Complete | Add graph context to RAG answers + graph highlight | 2026-02-06 |
-| 7. Presentability & Polish | ⬜ Not Started | README, robustness, light logging, minimal tests | - |
+| 7. Presentability & Polish | ✅ Complete | README, robustness, light logging, minimal tests | 2026-02-08 |
 
 **Status Legend**: ✅ Complete | 🟡 In Progress | ⬜ Not Started | ❌ Blocked
 
@@ -118,12 +118,12 @@
 
 **Goal**: Make the project robust + demo-ready (docs, UX, basic tests, light logging)
 
-- [ ] Add sidebar instructions + clear “what’s loaded” status + dataset attribution
-- [ ] Improve user-facing errors (missing API key, missing/corrupt embeddings cache, missing CSV columns)
-- [ ] Add loading indicators where useful (keep it simple)
-- [ ] Add light console logging for retrieval + graph query + LLM call duration (no heavy monitoring)
-- [ ] Add minimal pytest tests for critical functions (character extraction, graph context builder)
-- [ ] Expand README: features, usage, screenshot/GIF, env vars, deployment notes (Streamlit Community Cloud)
+- [x] Add sidebar instructions + clear "what's loaded" status + dataset attribution
+- [x] Improve user-facing errors (missing API key, missing/corrupt embeddings cache, missing CSV columns)
+- [x] Add loading indicators where useful (keep it simple)
+- [x] Add light console logging for retrieval + graph query + LLM call duration (no heavy monitoring)
+- [x] Add minimal pytest tests for critical functions (character extraction, graph context builder)
+- [x] Expand README: features, usage, env vars, deployment notes (Streamlit Community Cloud)
 - [ ] Final manual demo checklist (fresh venv, clean run, one good example Q&A)
 
 **Test Criteria**: A clean end-to-end demo run works reliably; README is presentable; a small test suite passes
